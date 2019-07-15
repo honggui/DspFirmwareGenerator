@@ -16,6 +16,14 @@ namespace HifiFirmwareGenerator
         private string mExtrFile;
         private UInt32 mExtrAddr;
         UInt32 mSecId = 0;
+
+        private UInt32 srcItcmStart = 0;
+        private UInt32 srcItcmEnd = 0;
+        private UInt32 dstItcmStart = 0;
+        private UInt32 srcDtcmStart = 0;
+        private UInt32 srcDtcmEnd = 0;
+        private UInt32 dstDtcmStart = 0;
+
         public ExecutableFile(string path, string core, string toolspath, string extrFile, UInt32 extrAddr)
         {
             mPath = path;
@@ -28,6 +36,17 @@ namespace HifiFirmwareGenerator
                 Console.WriteLine("Cannot find the executable file specified in ConfigFile");
                 throw new System.IO.FileNotFoundException();
             }
+        }
+
+        public void SetTcmAddr(UInt32 srcItcmStart, UInt32 srcItcmEnd, UInt32 dstItcmStart, 
+                                UInt32 srcDtcmStart, UInt32 srcDtcmEnd, UInt32 dstDtcmStart)
+        {
+            this.srcItcmStart = srcItcmStart;
+            this.srcItcmEnd = srcItcmEnd;
+            this.dstItcmStart = dstItcmStart;
+            this.srcDtcmStart = srcDtcmStart;
+            this.srcDtcmEnd = srcDtcmEnd;
+            this.dstDtcmStart = dstDtcmStart;
         }
 
         private void Prepare()
@@ -109,6 +128,7 @@ namespace HifiFirmwareGenerator
                 secInfo.name = eleArray[0];
                 secInfo.size = Convert.ToUInt32(eleArray[1]);
                 secInfo.addr = Convert.ToUInt32(eleArray[2]);
+                secInfo.addr = processTcmAddr(secInfo.addr);
                 if (secInfo.size == 0 || secInfo.addr == 0)
                     continue;
                 secInfo.id = mSecId;
@@ -135,6 +155,26 @@ namespace HifiFirmwareGenerator
             System.IO.File.Copy(ExtrPath, "process\\" + secInfo.name, true);
             Console.WriteLine("external file id : {0} name: {1}, size: {2}, addr: {3}", secInfo.id, secInfo.name, secInfo.size, secInfo.addr);
             secArray.Add(secInfo);
+        }
+
+        private UInt32 processTcmAddr(UInt32 srcAddr)
+        {
+            UInt32 tempAddr = srcAddr;
+            if (srcItcmStart == 0 && srcDtcmStart == 0)
+                return tempAddr;
+
+            if (srcItcmStart != 0 && srcItcmStart <= srcAddr && srcItcmEnd >= srcAddr)
+            {
+                tempAddr = (dstItcmStart - srcItcmStart) + srcAddr;
+                return tempAddr;
+            }
+
+            if (srcDtcmStart != 0 && srcDtcmStart <= srcAddr && srcDtcmEnd >= srcAddr)
+            {
+                tempAddr = (dstDtcmStart - srcDtcmStart) + srcAddr;
+                return tempAddr;
+            }
+            return tempAddr;
         }
     }
 }

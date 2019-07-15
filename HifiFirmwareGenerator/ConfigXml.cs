@@ -35,6 +35,14 @@ namespace HifiFirmwareGenerator
         public static string ATTR_EXTDMEM_START = "ExternalDataMemStart";
         public static string ATTR_EXTDMEM_END = "ExternalDataMemEnd";
 
+        public static string ATTR_SRC_ITCM_START = "SourceCodeMemStart";
+        public static string ATTR_SRC_ITCM_END = "SourceCodeMemEnd";
+        public static string ATTR_DST_ITCM_START = "DestinationCodeMemStart";
+
+        public static string ATTR_SRC_DTCM_START = "SourceDataMemStart";
+        public static string ATTR_SRC_DTCM_END = "SourceDataMemEnd";
+        public static string ATTR_DST_DTCM_START = "DestinationDataMemStart";
+
         public static string VALUE_PERMANENT = "Permanent";
         public static string VALUE_LOADABLE = "Loadable";
     }

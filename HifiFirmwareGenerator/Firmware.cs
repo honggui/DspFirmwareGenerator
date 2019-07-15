@@ -51,13 +51,21 @@ namespace HifiFirmwareGenerator
             // Parse firmware information in ConfigXml
             string version = fwNode.SelectSingleNode(ConfigXml.ATTR_VERSION).InnerText.Trim();
             string coreName = fwNode.SelectSingleNode(ConfigXml.ATTR_CORENAME).InnerText.Trim();
-            string toolsPath   = fwNode.SelectSingleNode(ConfigXml.ATTR_TOOLSPATH).InnerText.Trim();
+            string toolsPath = fwNode.SelectSingleNode(ConfigXml.ATTR_TOOLSPATH).InnerText.Trim();
             string compatiable = fwNode.SelectSingleNode(ConfigXml.ATTR_COMPATIBLE).InnerText.Trim();
             string exeFilePath = fwNode.SelectSingleNode(ConfigXml.ATTR_EXEFILE).InnerText.Trim();
             string extrFilePath = fwNode.SelectSingleNode(ConfigXml.ATTR_EXTRFILE).InnerText.Trim();
             UInt32 extrFileAddr = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_EXTRADDR).InnerText.Trim(), 16);
             UInt32 maxCodeSize = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_MAX_CSIZE).InnerText.Trim(), 16);
             UInt32 maxDataSize = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_MAX_DSIZE).InnerText.Trim(), 16);
+
+            UInt32 srcItcmStart = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_ITCM_START).InnerText.Trim(), 16);
+            UInt32 srcItcmEnd = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_ITCM_END).InnerText.Trim(), 16);
+            UInt32 dstItcmStart = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_DST_ITCM_START).InnerText.Trim(), 16);
+   
+            UInt32 srcDtcmStart = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_DTCM_START).InnerText.Trim(), 16);
+            UInt32 srcDtcmEnd = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_DTCM_END).InnerText.Trim(), 16);
+            UInt32 dstDtcmStart = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_DST_DTCM_START).InnerText.Trim(), 16);
 #if OVERLAYS
             UInt32 codeLoadableStart = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_LOADABLE_CSTART).InnerText.Trim(), 16);
             UInt32 codeLoadableSize = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_LOADABLE_CSIZE).InnerText.Trim(), 16);
@@ -74,8 +82,10 @@ namespace HifiFirmwareGenerator
             firmware.SetCompatible(compatiable);
             firmware.SetMaxCodeSize(maxCodeSize);
             firmware.SetMaxDataSize(maxDataSize);
+
             firmware.SetExecutableFile(new ExecutableFile(exeFilePath, coreName, toolsPath, extrFilePath, extrFileAddr));
             firmware.SetExternalFile(extrFilePath);
+            firmware.GetExecutableFile().SetTcmAddr(srcItcmStart, srcItcmEnd, dstItcmStart, srcDtcmStart, srcDtcmEnd, dstDtcmStart);
             ArrayList secInfo = firmware.GetExecutableFile().Parser();
 #if OVERLAYS
             firmware.SetCodeLoadableStart(codeLoadableStart);
@@ -91,7 +101,7 @@ namespace HifiFirmwareGenerator
                 return null;
             }
 
-            foreach(XmlNode node in nodeList)
+            foreach (XmlNode node in nodeList)
             {
                 Image image = null;
 
