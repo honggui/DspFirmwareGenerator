@@ -47,25 +47,64 @@ namespace HifiFirmwareGenerator
         public static Firmware CreateFromXml(XmlNode fwNode)
         {
             Firmware firmware = new Firmware();
-
+            XmlNode cur_node = null;
+            UInt32 extDataMemStart = 0, extDataMemEnd = 0;
+            UInt32 srcItcmStart = 0, srcItcmEnd = 0, dstItcmStart = 0;
+            UInt32 srcDtcmStart = 0, srcDtcmEnd = 0, dstDtcmStart = 0;
+            string extrFilePath = null; UInt32 extrFileAddr = 0;
             // Parse firmware information in ConfigXml
             string version = fwNode.SelectSingleNode(ConfigXml.ATTR_VERSION).InnerText.Trim();
             string coreName = fwNode.SelectSingleNode(ConfigXml.ATTR_CORENAME).InnerText.Trim();
             string toolsPath = fwNode.SelectSingleNode(ConfigXml.ATTR_TOOLSPATH).InnerText.Trim();
             string compatiable = fwNode.SelectSingleNode(ConfigXml.ATTR_COMPATIBLE).InnerText.Trim();
             string exeFilePath = fwNode.SelectSingleNode(ConfigXml.ATTR_EXEFILE).InnerText.Trim();
-            string extrFilePath = fwNode.SelectSingleNode(ConfigXml.ATTR_EXTRFILE).InnerText.Trim();
-            UInt32 extrFileAddr = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_EXTRADDR).InnerText.Trim(), 16);
+
+
             UInt32 maxCodeSize = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_MAX_CSIZE).InnerText.Trim(), 16);
             UInt32 maxDataSize = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_MAX_DSIZE).InnerText.Trim(), 16);
 
-            UInt32 srcItcmStart = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_ITCM_START).InnerText.Trim(), 16);
-            UInt32 srcItcmEnd = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_ITCM_END).InnerText.Trim(), 16);
-            UInt32 dstItcmStart = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_DST_ITCM_START).InnerText.Trim(), 16);
-   
-            UInt32 srcDtcmStart = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_DTCM_START).InnerText.Trim(), 16);
-            UInt32 srcDtcmEnd = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_DTCM_END).InnerText.Trim(), 16);
-            UInt32 dstDtcmStart = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_DST_DTCM_START).InnerText.Trim(), 16);
+            cur_node = fwNode.SelectSingleNode(ConfigXml.ATTR_EXTRFILE);
+            if (cur_node != null)
+                extrFilePath = cur_node.InnerText.Trim();
+            cur_node = fwNode.SelectSingleNode(ConfigXml.ATTR_EXTRADDR);
+            if (cur_node != null)
+                extrFileAddr = (UInt32)Convert.ToInt32(cur_node.InnerText.Trim(), 16);
+
+            /* itcm */
+            cur_node = fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_ITCM_START);
+            if (cur_node != null)
+                srcItcmStart = (UInt32)Convert.ToInt32(cur_node.InnerText.Trim(), 16);
+
+            cur_node = fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_ITCM_END);
+            if (cur_node != null)
+                srcItcmEnd = (UInt32)Convert.ToInt32(cur_node.InnerText.Trim(), 16);
+
+            cur_node = fwNode.SelectSingleNode(ConfigXml.ATTR_DST_ITCM_START);
+            if (cur_node != null)
+                dstItcmStart = (UInt32)Convert.ToInt32(cur_node.InnerText.Trim(), 16);
+
+            /* dtcm */
+            cur_node = fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_DTCM_START);
+            if (cur_node != null)
+                srcDtcmStart = (UInt32)Convert.ToInt32(cur_node.InnerText.Trim(), 16);
+
+            cur_node = fwNode.SelectSingleNode(ConfigXml.ATTR_SRC_DTCM_END);
+            if (cur_node != null)
+                srcDtcmEnd = (UInt32)Convert.ToInt32(cur_node.InnerText.Trim(), 16);
+
+            cur_node = fwNode.SelectSingleNode(ConfigXml.ATTR_DST_DTCM_START);
+            if (cur_node != null)
+                dstDtcmStart = (UInt32)Convert.ToInt32(cur_node.InnerText.Trim(), 16);
+
+            /* extern data */
+            cur_node = fwNode.SelectSingleNode(ConfigXml.ATTR_EXTDMEM_START);
+            if (cur_node != null)
+                extDataMemStart = (UInt32)Convert.ToInt32(cur_node.InnerText.Trim(), 16);
+
+            cur_node = fwNode.SelectSingleNode(ConfigXml.ATTR_EXTDMEM_END);
+            if (cur_node != null)
+                extDataMemEnd = (UInt32)Convert.ToInt32(cur_node.InnerText.Trim(), 16);
+
 #if OVERLAYS
             UInt32 codeLoadableStart = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_LOADABLE_CSTART).InnerText.Trim(), 16);
             UInt32 codeLoadableSize = (UInt32)Convert.ToInt32(fwNode.SelectSingleNode(ConfigXml.ATTR_LOADABLE_CSIZE).InnerText.Trim(), 16);
@@ -85,7 +124,8 @@ namespace HifiFirmwareGenerator
 
             firmware.SetExecutableFile(new ExecutableFile(exeFilePath, coreName, toolsPath, extrFilePath, extrFileAddr));
             firmware.SetExternalFile(extrFilePath);
-            firmware.GetExecutableFile().SetTcmAddr(srcItcmStart, srcItcmEnd, dstItcmStart, srcDtcmStart, srcDtcmEnd, dstDtcmStart);
+            firmware.GetExecutableFile().SetTcmAddr(srcItcmStart, srcItcmEnd, dstItcmStart, srcDtcmStart,
+                                                    srcDtcmEnd, dstDtcmStart, extDataMemStart, extDataMemEnd);
             ArrayList secInfo = firmware.GetExecutableFile().Parser();
 #if OVERLAYS
             firmware.SetCodeLoadableStart(codeLoadableStart);

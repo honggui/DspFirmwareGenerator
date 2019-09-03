@@ -13,8 +13,8 @@ namespace HifiFirmwareGenerator
         private string mPath;
         private string mCoreName;
         private string mToolsPath;
-        private string mExtrFile;
-        private UInt32 mExtrAddr;
+        private string mExtrFile= null;
+        private UInt32 mExtrAddr = 0;
         UInt32 mSecId = 0;
 
         private UInt32 srcItcmStart = 0;
@@ -23,6 +23,8 @@ namespace HifiFirmwareGenerator
         private UInt32 srcDtcmStart = 0;
         private UInt32 srcDtcmEnd = 0;
         private UInt32 dstDtcmStart = 0;
+        private UInt32 extDataStart = 0;
+        private UInt32 extDataEnd = 0;
 
         public ExecutableFile(string path, string core, string toolspath, string extrFile, UInt32 extrAddr)
         {
@@ -39,7 +41,8 @@ namespace HifiFirmwareGenerator
         }
 
         public void SetTcmAddr(UInt32 srcItcmStart, UInt32 srcItcmEnd, UInt32 dstItcmStart, 
-                                UInt32 srcDtcmStart, UInt32 srcDtcmEnd, UInt32 dstDtcmStart)
+                                UInt32 srcDtcmStart, UInt32 srcDtcmEnd, UInt32 dstDtcmStart,
+                                UInt32 extDataStart, UInt32 extDataEnd)
         {
             this.srcItcmStart = srcItcmStart;
             this.srcItcmEnd = srcItcmEnd;
@@ -47,6 +50,8 @@ namespace HifiFirmwareGenerator
             this.srcDtcmStart = srcDtcmStart;
             this.srcDtcmEnd = srcDtcmEnd;
             this.dstDtcmStart = dstDtcmStart;
+            this.extDataStart = extDataStart;
+            this.extDataEnd = extDataEnd;
         }
 
         private void Prepare()
@@ -90,7 +95,9 @@ namespace HifiFirmwareGenerator
 
         private void ExtractSection(ArrayList secInfo)
         {
-            foreach (SecInfo info in secInfo) {
+            for (int i = 0; i < secInfo.Count; i++)
+            {
+                SecInfo info = (SecInfo)secInfo[i];
                 System.Diagnostics.Process exep = new System.Diagnostics.Process();
                 exep.StartInfo.FileName = string.Format("{0}/xt-objcopy.exe", mToolsPath);
                 exep.StartInfo.Arguments = string.Format("-O binary -j {0} {1} {2} --xtensa-core={3}",
@@ -105,6 +112,18 @@ namespace HifiFirmwareGenerator
                 {
                     Console.WriteLine("General {0} fail", info.name);
                     throw new System.IO.FileNotFoundException();
+                }
+
+                if (info.addr != this.extDataStart || !info.name.Equals(".srom.rodata"))
+                    continue;
+
+                //TODO support more section
+                /* external data partition */
+                if (this.extDataStart != 0 && this.extDataEnd != 0)
+                {
+                    System.IO.File.Copy("process\\" + info.name, "output\\" + "ext_rkdsp.bin", true);
+                    Console.WriteLine("Get rodata section to ext_rkdsp.bin");
+                    secInfo.RemoveAt(i);
                 }
             }
         }
@@ -131,6 +150,7 @@ namespace HifiFirmwareGenerator
                 secInfo.addr = processTcmAddr(secInfo.addr);
                 if (secInfo.size == 0 || secInfo.addr == 0)
                     continue;
+
                 secInfo.id = mSecId;
                 mSecId++;
                 Console.WriteLine("id : {0} name: {1}, size: {2}, addr: {3}", secInfo.id, secInfo.name, secInfo.size, secInfo.addr);
@@ -142,9 +162,14 @@ namespace HifiFirmwareGenerator
         private void ExternalFile(ArrayList secArray)
         {
             string currPath = System.IO.Directory.GetCurrentDirectory();
-            string ExtrPath = currPath + "\\" + mExtrFile;
-            if (mExtrFile.Length == 0 || System.IO.File.Exists(ExtrPath) == false)
+
+            if (string.IsNullOrEmpty(mExtrFile) || mExtrAddr == 0)
                 return;
+
+            string ExtrPath = currPath + "\\" + mExtrFile;
+            if (System.IO.File.Exists(ExtrPath) == false)
+                return;
+
             SecInfo secInfo;
             secInfo.name = System.IO.Path.GetFileName(mExtrFile);
             System.IO.FileInfo fileInfo = new System.IO.FileInfo(ExtrPath);

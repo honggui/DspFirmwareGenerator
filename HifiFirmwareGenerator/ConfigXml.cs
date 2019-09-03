@@ -30,6 +30,7 @@ namespace HifiFirmwareGenerator
         public static string ATTR_LOADABLE_DSIZE = "DataLoadableSize";
         public static string ATTR_OVERLAY_START = "OverlayStart";
         public static string ATTR_OVERLAY_END = "OverlayEnd";
+
         public static string ATTR_EXTCMEM_START = "ExternalCodeMemStart";
         public static string ATTR_EXTCMEM_END = "ExternalCodeMemEnd";
         public static string ATTR_EXTDMEM_START = "ExternalDataMemStart";
