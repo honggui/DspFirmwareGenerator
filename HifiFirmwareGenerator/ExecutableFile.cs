@@ -57,16 +57,20 @@ namespace HifiFirmwareGenerator
         private void Prepare()
         {
             /* Check necessary tools */
-            if (System.IO.File.Exists(mToolsPath + "/xt-objcopy.exe") == false)
+            //if (System.IO.File.Exists(mToolsPath + "/xt-objcopy.exe") == false)
+            if (System.IO.File.Exists(mToolsPath + "/xt-objcopy") == false)
             {
-                Console.WriteLine("xt-objcopy.exe is necessary, please set right XtensaTools path");
+                //Console.WriteLine("xt-objcopy.exe is necessary, please set right XtensaTools path");
+                Console.WriteLine("xt-objcopy is necessary, please set right XtensaTools path");
                 throw new System.IO.FileNotFoundException();
             }
 
             /* Check necessary tools */
-            if (System.IO.File.Exists(mToolsPath + "/xt-size.exe") == false)
+            //if (System.IO.File.Exists(mToolsPath + "/xt-size.exe") == false)
+            if (System.IO.File.Exists(mToolsPath + "/xt-size") == false)
             {
-                Console.WriteLine("xt-size.exe is necessary, please set right XtensaTools path");
+                //Console.WriteLine("xt-size.exe is necessary, please set right XtensaTools path");
+                Console.WriteLine("xt-size is necessary, please set right XtensaTools path");
                 throw new System.IO.FileNotFoundException();
             }
         }
@@ -75,7 +79,8 @@ namespace HifiFirmwareGenerator
         {
             this.Prepare();
             System.Diagnostics.Process exep = new System.Diagnostics.Process();
-            exep.StartInfo.FileName = string.Format("{0}/xt-size.exe", mToolsPath);
+            //exep.StartInfo.FileName = string.Format("{0}/xt-size.exe", mToolsPath);
+            exep.StartInfo.FileName = string.Format("{0}/xt-size", mToolsPath);
             exep.StartInfo.Arguments = string.Format("-A {0}", mPath);
             Console.WriteLine("Execute: {0} {1}", exep.StartInfo.FileName, exep.StartInfo.Arguments);
             exep.StartInfo.CreateNoWindow = true;
@@ -99,7 +104,8 @@ namespace HifiFirmwareGenerator
             {
                 SecInfo info = (SecInfo)secInfo[i];
                 System.Diagnostics.Process exep = new System.Diagnostics.Process();
-                exep.StartInfo.FileName = string.Format("{0}/xt-objcopy.exe", mToolsPath);
+                //exep.StartInfo.FileName = string.Format("{0}/xt-objcopy.exe", mToolsPath);
+                exep.StartInfo.FileName = string.Format("{0}/xt-objcopy", mToolsPath);
                 exep.StartInfo.Arguments = string.Format("-O binary -j {0} {1} {2} --xtensa-core={3}",
                                            info.name, mPath, "process/" + info.name, mCoreName);
                 Console.WriteLine("Execute: {0} {1}", exep.StartInfo.FileName, exep.StartInfo.Arguments);
@@ -121,7 +127,8 @@ namespace HifiFirmwareGenerator
                 /* external data partition */
                 if (this.extDataStart != 0 && this.extDataEnd != 0)
                 {
-                    System.IO.File.Copy("process\\" + info.name, "output\\" + "ext_rkdsp.bin", true);
+                    //System.IO.File.Copy("process\\" + info.name, "output\\" + "ext_rkdsp.bin", true);
+                    System.IO.File.Copy("process/" + info.name, "output/" + "ext_rkdsp.bin", true);
                     Console.WriteLine("Get rodata section to ext_rkdsp.bin");
                     secInfo.RemoveAt(i);
                 }
@@ -131,7 +138,8 @@ namespace HifiFirmwareGenerator
         private ArrayList ParserOutput(string output)
         {
             ArrayList secArray = new ArrayList();
-            string[] strArray = output.Split(new String[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            //string[] strArray = output.Split(new String[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            string[] strArray = output.Split(new String[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string str in strArray)
             {
                 // Remove bss section, because the bss will be init in reset vector.
@@ -166,7 +174,8 @@ namespace HifiFirmwareGenerator
             if (string.IsNullOrEmpty(mExtrFile) || mExtrAddr == 0)
                 return;
 
-            string ExtrPath = currPath + "\\" + mExtrFile;
+            //string ExtrPath = currPath + "\\" + mExtrFile;
+            string ExtrPath = currPath + "/" + mExtrFile;
             if (System.IO.File.Exists(ExtrPath) == false)
                 return;
 
@@ -177,7 +186,8 @@ namespace HifiFirmwareGenerator
             secInfo.addr = mExtrAddr;
             secInfo.id = mSecId;
             mSecId++;
-            System.IO.File.Copy(ExtrPath, "process\\" + secInfo.name, true);
+            //System.IO.File.Copy(ExtrPath, "process\\" + secInfo.name, true);
+            System.IO.File.Copy(ExtrPath, "process/" + secInfo.name, true);
             Console.WriteLine("external file id : {0} name: {1}, size: {2}, addr: {3}", secInfo.id, secInfo.name, secInfo.size, secInfo.addr);
             secArray.Add(secInfo);
         }

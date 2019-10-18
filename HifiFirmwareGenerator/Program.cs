@@ -20,7 +20,8 @@ namespace HifiFirmwareGenerator
             string currPath = System.IO.Directory.GetCurrentDirectory();
 
             /* Create directory "process" */
-            string subPath = currPath + "\\" + PROCESS_DIRECTORY;
+            //string subPath = currPath + "\\" + PROCESS_DIRECTORY;
+            string subPath = currPath + "/" + PROCESS_DIRECTORY;
 
             if (System.IO.Directory.Exists(subPath))
             {
@@ -36,7 +37,8 @@ namespace HifiFirmwareGenerator
             }
        
             /* Create directory "output" */
-            subPath = currPath + "\\" + OUTPUT_DIRECTORY;
+            //subPath = currPath + "\\" + OUTPUT_DIRECTORY;
+            subPath = currPath + "/" + OUTPUT_DIRECTORY;
             if (!System.IO.Directory.Exists(subPath))
             {
                 System.IO.Directory.CreateDirectory(subPath);
